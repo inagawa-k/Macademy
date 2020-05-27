@@ -49,12 +49,299 @@
       <div id="hd">
         <h3>能力値</h3>
       </div>
+<<<<<<< HEAD
       <div>
         <div v-for="item in abilities" v-bind:key="item.name">
           {{item.name}}基本値：<input v-model="item.value" class="num" v-on:change="onChangeAbility(item.name)"> (ボーナス：{{item.bonus}})
         </div>
       </div>
       <hr>
+=======
+      <div>戦闘移動：<input name="move.combat" value="0" disabled="disabled" type="text">m</div>
+      <div>全力移動：<input name="move.full" value="0" disabled="disabled" type="text">m</div>
+      <hr><br>    
+    
+
+      <div> <button type="button" name="button_save" onclick="OnClickSaveButton(this)">zip
+          にしてダウンロード</button> </div>
+
+    <br>
+    <script type="text/javascript" src="https://js.cybozu.com/jszip/v3.1.5/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js"></script>
+    <script type="text/javascript">
+
+      function getByName(name) {
+        return document.getElementsByName(name).item(0).value; 
+      }
+
+      function getElemByName(name) {
+        return document.getElementsByName(name).item(0); 
+      }
+
+      // 能力値の入力時に能力値ボーナスを計算する
+      function OnInputAbility($this) {
+        getElemByName("ability_b.strong").value = Math.floor(getByName("ability.strong") / 4);
+        getElemByName("ability_b.reflexes").value = Math.floor(getByName("ability.reflexes") / 4);
+        getElemByName("ability_b.sense").value = Math.floor(getByName("ability.sense") / 4);
+        getElemByName("ability_b.intellect").value = Math.floor(getByName("ability.intellect") / 4);
+        getElemByName("ability_b.will").value = Math.floor(getByName("ability.will") / 4);
+        getElemByName("ability_b.blessing").value = Math.floor(getByName("ability.blessing") / 4);
+      }
+
+      // 行動値の入力時に移動力を計算する
+      function OnInputOutfitsAction($this) {
+        getElemByName("move.combat").value = Number(getByName("outfits.total.action")) + 5;
+        getElemByName("move.full").value = getByName("move.combat") * 2;
+      }
+
+      /* xml の elem 作成 */
+      function createElem(name, text) {
+          var elem = document.createElement('data');
+          elem.setAttribute('name', name);
+          elem.innerText = text;
+          return elem;
+      }
+
+      /* numberResource である xml elem 作成 */
+      function createNumRcElem(name, maxValue, currentValue) {
+          var elem = document.createElement('data');
+          elem.setAttribute('name', name);
+          elem.innerText = maxValue;
+          elem.setAttribute('type', 'numberResource');
+          elem.setAttribute('currentValue', currentValue);
+          return elem;
+      }
+
+      /* source から指定された name を取得し，xml elem を作成 */
+      function createElemByName(html_name, xml_name) {
+          return createElem(xml_name, getByName(html_name));
+      }
+
+      /******** 各ブロックの作成処理 ********/
+
+      function createImgBlock() {
+        var img = document.createElement('data');
+        img.setAttribute('name', 'image');
+        var elem = document.createElement('data');
+        elem.setAttribute('type', 'image');
+        elem.setAttribute('name', 'imageIdentifier');
+        elem.innerText = 'null';
+        img.appendChild(elem);
+
+        return img;
+      }
+
+      function createCommonBlock() {
+        var common = document.createElement('data');
+        common.setAttribute('name', 'common');      
+        common.appendChild(createElemByName('base.name', 'name' ));
+        common.appendChild(createElemByName('base.player', 'プレイヤー名' ));
+
+        common.appendChild(createElemByName('base.race', '種族' ));
+        common.appendChild(createElemByName('base.cover', 'カバー' ));
+
+        common.appendChild(createElemByName('class.1', 'クラス1' ));
+        common.appendChild(createElemByName('level.1', 'クラス1のレベル' ));
+        common.appendChild(createElemByName('class.2', 'クラス2' ));
+        common.appendChild(createElemByName('level.2', 'クラス2のレベル' ));
+        common.appendChild(createElemByName('class.3', 'クラス3' ));
+        common.appendChild(createElemByName('level.3', 'クラス3のレベル' ));
+        
+        common.appendChild(createNumRcElem('衝動点', 10, 0));
+
+        return common;
+      }
+
+      function createResourceBlock() {
+        /* キャラシートからHP, MPを取得 */
+        var hp = getByName('outfits.total.hp');
+        var mp = getByName('outfits.total.mp');
+
+        var resource = document.createElement('data');
+        resource.setAttribute('name', 'リソース');
+        resource.appendChild(createNumRcElem('HP', hp, hp));
+        resource.appendChild(createNumRcElem('MP', mp, mp));
+
+        return resource;
+      }
+
+      function createMoveBlock() {
+        var move = document.createElement('data');
+        move.setAttribute('name', '行動・移動');
+        move.appendChild(createElemByName('outfits.total.action', '行動値'));
+        move.appendChild(createElemByName('move.combat', '戦闘移動'));
+        move.appendChild(createElemByName('move.full', '全力移動'));
+
+        return move;
+      }
+
+      function createAbilityBonusBlock() {
+        var ability_b = document.createElement('data');
+        ability_b.setAttribute('name', '能力値ボーナス');
+        ability_b.appendChild(createElemByName('ability_b.strong', '体力'));
+        ability_b.appendChild(createElemByName('ability_b.reflexes','反射'));
+        ability_b.appendChild(createElemByName('ability_b.sense', '知覚'));
+        ability_b.appendChild(createElemByName('ability_b.intellect', '理知'));
+        ability_b.appendChild(createElemByName('ability_b.will', '意志'));
+        ability_b.appendChild(createElemByName('ability_b.blessing', '幸運'));
+
+        return ability_b;
+      }
+
+      function createAbilityBlock() {
+        var ability = document.createElement('data');
+        ability.setAttribute('name', '能力基本値');
+        ability.appendChild(createElemByName('ability.strong', '体力基本値'));
+        ability.appendChild(createElemByName('ability.reflexes','反射基本値'));
+        ability.appendChild(createElemByName('ability.sense', '知覚基本値'));
+        ability.appendChild(createElemByName('ability.intellect', '理知基本値'));
+        ability.appendChild(createElemByName('ability.will', '意志基本値'));
+        ability.appendChild(createElemByName('ability.blessing', '幸運基本値'));
+
+        return ability;
+      }
+
+      function createOutfitsBlock() {
+        var outfits = document.createElement('data');
+        outfits.setAttribute('name', '戦闘値');
+        outfits.appendChild(createElemByName('outfits.total.hit', '命中'));
+        outfits.appendChild(createElemByName('outfits.total.dodge', '回避'));
+        outfits.appendChild(createElemByName('outfits.total.magic', '魔導'));
+        outfits.appendChild(createElemByName('outfits.total.countermagic', '抗魔'));
+        outfits.appendChild(createElemByName('outfits.total.action', '行動'));
+        outfits.appendChild(createElemByName('outfits.total.hp', '耐久'));
+        outfits.appendChild(createElemByName('outfits.total.mp', '精神'));
+
+        return outfits;
+      }
+
+      function createChatPaletteBlock() {
+        var cpd = document.createElement('chat-palette');
+
+        var txt = '';
+        txt += '========= 基本的な判定 ======== \n';
+        txt += '2d6+{体力} 【体力】\n';
+        txt += '2d6+{反射} 【反射】\n';
+        txt += '2d6+{知覚} 【知覚】\n';
+        txt += '2d6+{理知} 【理知】\n';
+        txt += '2d6+{意志} 【意志】\n';
+        txt += '2d6+{幸運} 【幸運】\n';
+        txt += '\n';
+        txt += '========= 戦闘中の判定 ======== \n';
+        txt += '2d6+{命中} 【命中】\n';
+        txt += '2d6+{回避} 【回避】\n';
+        txt += '2d6+{魔導} 【魔導】\n';
+        txt += '2d6+{抗魔} 【抗魔】\n';
+        cpd.innerText = txt;
+
+        return cpd;
+      }
+
+      // zip をセーブする
+      function OnClickSaveButton($this) {
+
+        /* xml を生成 */
+        var xml = document.createElement('character');
+        xml.setAttribute('location.x', '0');
+        xml.setAttribute('location.y', '0');
+        xml.setAttribute('posZ', '0');
+
+        /* xml の root に char 要素を作成する */
+        var char = document.createElement('data');
+        char.setAttribute('name', 'character');
+
+        /* img ブロックを作成し，char の子ノードとする */
+        char.appendChild(createImgBlock());
+
+        /* common (キャラクター名，プレイヤー名など) ブロックを作成し，char の子ノードとする */
+        char.appendChild(createCommonBlock());
+
+        /* detail (能力値など) ブロックを作成し，char の子ノードとする */
+        var detail = document.createElement('data');
+        detail.setAttribute('name', 'detail');
+        char.appendChild(detail);
+
+        /* resource (HP, MP)ブロックを作成し，detail の子ノードとする */
+        detail.appendChild(createResourceBlock());
+
+        /* move (行動値，移動値)ブロックを作成し，detail の子ノードとする */
+        detail.appendChild(createMoveBlock());
+  
+        /* ability_b (能力値ボーナス)ブロックを作成し，detail の子ノードとする */
+        detail.appendChild(createAbilityBonusBlock());
+
+        /* ability (能力値ボーナス)ブロックを作成し，detail の子ノードとする */
+        detail.appendChild(createAbilityBlock());
+
+        /* outfits (戦闘値) ブロックを作成し，detail の子ノードとする */
+        detail.appendChild(createOutfitsBlock());
+
+        /* 雛形にキャラデータとチャットパレットを設定 */
+        xml.appendChild(char);
+        xml.appendChild(createChatPaletteBlock());
+
+        /* xml を zip 圧縮 */
+        var s = new XMLSerializer();
+        var out = s.serializeToString(xml);
+        out = out.replace(/xmlns=.http:\/\/www\.w3\.org\/1999\/xhtml../, '');
+        out = out.replace(/<br \/>/g, '\n');
+        out = out.replace(/currentvalue/g, 'currentValue');
+        var zip = new JSZip();
+        var char_name = getByName('base.name');
+        zip.file(`${char_name}.xml`, out);
+
+        /* ファイル保存 */
+        zip.generateAsync({type:'blob'})
+        .then(function(blob) {
+            saveAs(blob, `${char_name}.zip`);
+        });
+      }
+
+      function setData(doc, html_name, xml_name) {
+        getElemByName(html_name).value = doc.getElementsByName(xml_name)[0].innerHTML;    
+      }
+
+      function parseXml(xml) {
+        var parser = new DOMParser();
+        const doc = parser.parseFromString(xml, "text/xml");
+        //text = doc.getElementsByName("体力")[0];
+        //alert(text.innerHTML);
+
+        //getElemByName("base.name").value = doc.getElementsByName("name")[0].innerHTML;    
+        setData(doc, "base.name", "name");
+        setData(doc, "base.player", "プレイヤー名");
+        setData(doc, "base.race", "種族");
+        setData(doc, "base.cover", "カバー");
+
+        setData(doc, "class.1", "クラス1");
+        setData(doc, "level.1", "クラス1のレベル");
+        setData(doc, "class.2", "クラス2");
+        setData(doc, "level.2", "クラス2のレベル");
+        setData(doc, "class.3", "クラス3");
+        setData(doc, "level.3", "クラス3のレベル");
+
+        setData(doc, "ability_b.strong", "体力");
+        setData(doc, "ability_b.reflexes", "反射");
+        setData(doc, "ability_b.sense", "知覚");
+        setData(doc, "ability_b.intellect", "理知");
+        setData(doc, "ability_b.will", "意志");
+        setData(doc, "ability_b.blessing", "幸運");
+
+        setData(doc, "ability.strong", "体力基本値");
+        setData(doc, "ability.reflexes", "反射基本値");
+        setData(doc, "ability.sense", "知覚基本値");
+        setData(doc, "ability.intellect", "理知基本値");
+        setData(doc, "ability.will", "意志基本値");
+        setData(doc, "ability.blessing", "幸運基本値");
+
+        setData(doc, "outfits.total.hit", "命中");
+        setData(doc, "outfits.total.dodge", "回避");
+        setData(doc, "outfits.total.magic", "魔導");
+        setData(doc, "outfits.total.countermagic", "抗魔");
+        setData(doc, "outfits.total.action", "行動");
+        setData(doc, "outfits.total.hp", "耐久");
+        setData(doc, "outfits.total.mp", "精神");
+>>>>>>> 40bbc72713ffac1cbcba8138a39f2b0e3f29afe3
 
       <!-- combat block -->
       <div id="hd">
